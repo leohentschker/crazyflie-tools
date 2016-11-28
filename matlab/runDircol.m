@@ -26,11 +26,16 @@ prog = prog.addFinalCost(@finalCost);
 tf0 = 2;
 traj_init.x = PPTrajectory(foh([0,tf0],[double(x0),double(xf)]));
 traj_init.u = ConstantTrajectory(u0);
+display(traj_init.x);
+return;
 
 info=0;
 while (info~=1)
   tic
+  display('asd');
   [xtraj,utraj,z,F,info] = prog.solveTraj(tf0,traj_init);
+  display(xtraj);
+  display(utraj);
   toc
 end
 
