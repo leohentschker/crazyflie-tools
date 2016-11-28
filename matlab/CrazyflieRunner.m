@@ -2,18 +2,18 @@ classdef CrazyflieRunner
 
     properties(Constant)
         % optimization variables
-        min_optimization_duration = .1
-        max_optimization_duration = 4
+        min_trajectory_duration = .1
+        max_trajectory_duration = 30
         total_timesteps = 11
         
         % allow the quadcopter to drift by two coordinates
-        final_x_offset = 2
+        final_x_offset = 0
     end
     
     properties
-        cf_model = CrazyflieModel()      
+        cf_model = CrazyflieModel()
         initial_position
-        initial_thrust
+        u0
         optimizer
         final_position
     end
@@ -31,8 +31,8 @@ classdef CrazyflieRunner
         end
         
         % set the initial thrust of the crazyflie
-        function obj = set_initial_thrust(obj)
-            obj.initial_thrust = [0 0 0 0 0 0 obj.cf_model.nominal_thrust]';
+        function obj = set_u0(obj, u0)
+            obj.u0 = u0;
         end
 
         % set the desired final position for the crazyflie
@@ -50,14 +50,14 @@ classdef CrazyflieRunner
         
         % gets the trajectory optimizer for the crazyflie
         function obj = set_trajectory_optimizer(obj)
-            obj.optimizer = DircolTrajectoryOptimization(obj.cf_model, CrazyflieRunner.total_timesteps, [CrazyflieRunner.min_optimization_duration CrazyflieRunner.max_optimization_duration]);  
+            obj.optimizer = DircolTrajectoryOptimization(obj.cf_model, CrazyflieRunner.total_timesteps, [CrazyflieRunner.min_trajectory_duration CrazyflieRunner.max_trajectory_duration]);  
         end
 
         % set the initial position and initial thrust constraints
         function obj = set_constraints(obj)
             % construct the constraints
             initial_position_constraint = ConstantConstraint(double(obj.initial_position));
-            thrust_constraint = ConstantConstraint(obj.initial_thrust);
+            thrust_constraint = ConstantConstraint(obj.u0);
             final_position_constraint = ConstantConstraint(double(obj.final_position));
 
             % add the initial constraints
@@ -74,13 +74,13 @@ classdef CrazyflieRunner
         end
 
         % initialize the trajectory optimizer
-        function obj = initialize_runner(obj, pitch, roll)
+        function obj = initialize_runner(obj, pitch, roll, u0)
             % set the trajectory optimizer
             obj = obj.set_trajectory_optimizer();
             
             % set the initial variables
             obj = obj.set_initial_position(pitch, roll);
-            obj = obj.set_initial_thrust();
+            obj = obj.set_u0(u0);
             obj = obj.set_final_position();
 
             % set the constraints from the variables
@@ -90,7 +90,7 @@ classdef CrazyflieRunner
         % return an initial trajectory for the crazyflie to start out with
         function initial_trajectory = get_initial_trajectory(runner, tf0)
             initial_trajectory.x = PPTrajectory(foh([0,tf0],[double(runner.initial_position), double(runner.final_position)]));
-            initial_trajectory.u = ConstantTrajectory(runner.initial_thrust);
+            initial_trajectory.u = ConstantTrajectory(runner.u0);
         end
 
         % run the simulation for the crazyflie
@@ -106,9 +106,9 @@ classdef CrazyflieRunner
         end
         
         % fully simulates the process of running the quadcopter
-        function [xtraj, utraj] = simulate(obj, initial_pitch, initial_roll)
+        function [xtraj, utraj] = simulate(obj, initial_pitch, initial_roll, u0)
             % initialize the values associated with the quadcopter
-            obj = obj.initialize_runner(initial_pitch, initial_roll);
+            obj = obj.initialize_runner(initial_pitch, initial_roll, u0);
             
             % set the constraints of the runner
             obj = obj.set_constraints();
