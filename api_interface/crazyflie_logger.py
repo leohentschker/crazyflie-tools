@@ -7,7 +7,7 @@ class CrazyflieLogger:
     @staticmethod
     def set_logging():
         root = logging.getLogger()
-        root.setLevel(logging.WARNING)
+        root.setLevel(logging.DEBUG)
 
         ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(logging.DEBUG)

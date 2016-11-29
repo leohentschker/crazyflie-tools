@@ -1,5 +1,10 @@
 classdef TrajectorySimulator
 
+    properties(Constant)
+        pitch_index = 5
+        roll_index = 4
+    end
+    
     properties
         r = RigidBodyManipulator('crazyflie.urdf', struct('floating', true))
         runner = CrazyflieRunner()
@@ -21,12 +26,28 @@ classdef TrajectorySimulator
             xtraj = setOutputFrame(xtraj, getStateFrame(obj.r));
         end
         
-        % takes in the previous trajectory and an initial position and
-        % returns what the next trajectory should be
-        function new_utraj = get_new_utraj(obj, utraj, initial_pos)
-            utraj_breaks = utraj.getBreaks();
-            initial_utraj = utraj.eval(utraj_breaks(end));
-            new_utraj = utraj;
+        function utraj_file = get_utraj_file(obj, pitch, roll)
+            % run the python script to get the file
+            command = ['cd ../api_interface && /usr/local/bin/python manage.py find_closest_trajectory --pitch ', num2str(pitch), ' --roll ', num2str(roll)];
+            [~, utraj_file] = system(command);
+            
+            % strip the trailing newline
+            utraj_file = utraj_file(1: length(utraj_file) - 1);
+
+        end
+        
+        % takes in the previous pitch and roll and then uses the solved
+        % trajectories to find the closest and best one
+        function utraj = get_new_utraj(obj, pitch, roll)
+
+            % get the file name
+            utraj_file = obj.get_utraj_file(pitch, roll);
+
+            % load the new trajectory as a variable
+            load(utraj_file);
+            
+            % set the correct input on the utraj for the cascade
+            utraj = setOutputFrame(utraj, getInputFrame(obj.runner.cf_model));
         end
         
         % construct the expected x-trajectory
@@ -70,11 +91,13 @@ classdef TrajectorySimulator
                 end
                 
                 % get the new velocity trajectory
-                utraj = obj.get_new_utraj(utraj, initial_pos);
+                utraj = obj.get_new_utraj(initial_pos(obj.pitch_index), initial_pos(obj.roll_index));
             end
         end
 
-        function visualizeTrajectory(obj, utraj, initial_pos)
+        function visualizeTrajectory(obj, initial_pos)
+            
+            utraj = obj.get_new_utraj(initial_pos(obj.pitch_index), initial_pos(obj.roll_index));
             
             % determine the x trajectory with the initial position and
             % velocity trajectory
@@ -87,5 +110,6 @@ classdef TrajectorySimulator
             vis.playback(xtraj, struct('slider', true));
             
         end
+
     end
 end

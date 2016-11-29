@@ -69,7 +69,9 @@ class DrakeFly(crazyflie.Crazyflie):
         time.sleep(1)
         end = time.time() + 10
         while time.time() < end:
-            self.commander.send_setpoint(0, 0, 0, 1000)
+            self.commander.send_setpoint(0, 0, 0, 100)
+
+        self.commander.send_setpoint(0, 0, 0, 0)
 
         print "AND WE DID IT"
 
