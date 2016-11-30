@@ -10,6 +10,18 @@ classdef TrajectorySimulator
         runner = CrazyflieRunner()
     end
     
+    methods(Static)
+        function traj_file = get_traj_file(pitch, roll)
+            % run the python script to get the file
+            command = ['cd ../api_interface && /usr/local/bin/python manage.py find_closest_trajectory --pitch ', num2str(pitch), ' --roll ', num2str(roll)];
+            [~, traj_file] = system(command);
+            
+            % strip the trailing newline
+            traj_file = traj_file(1: length(traj_file) - 1);
+
+        end
+    end
+    
     methods
 
         % given a velocity trajectory and an initial position,
@@ -26,22 +38,12 @@ classdef TrajectorySimulator
             xtraj = setOutputFrame(xtraj, getStateFrame(obj.r));
         end
         
-        function utraj_file = get_utraj_file(obj, pitch, roll)
-            % run the python script to get the file
-            command = ['cd ../api_interface && /usr/local/bin/python manage.py find_closest_trajectory --pitch ', num2str(pitch), ' --roll ', num2str(roll)];
-            [~, utraj_file] = system(command);
-            
-            % strip the trailing newline
-            utraj_file = utraj_file(1: length(utraj_file) - 1);
-
-        end
-        
         % takes in the previous pitch and roll and then uses the solved
         % trajectories to find the closest and best one
         function utraj = get_new_utraj(obj, pitch, roll)
 
             % get the file name
-            utraj_file = obj.get_utraj_file(pitch, roll);
+            utraj_file = obj.get_traj_file(pitch, roll);
 
             % load the new trajectory as a variable
             load(utraj_file);
@@ -96,16 +98,16 @@ classdef TrajectorySimulator
         end
 
         function visualizeTrajectory(obj, initial_pos)
-            
+
             utraj = obj.get_new_utraj(initial_pos(obj.pitch_index), initial_pos(obj.roll_index));
-            
+
             % determine the x trajectory with the initial position and
             % velocity trajectory
             xtraj = obj.simulateTrajectory(utraj, initial_pos);
-            
+
             % create a visualizer to look at the trajectory
             vis = obj.r.constructVisualizer();
-            
+
             % playback the x trajectory, including a slider
             vis.playback(xtraj, struct('slider', true));
             

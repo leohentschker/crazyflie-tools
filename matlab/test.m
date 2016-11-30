@@ -1,5 +1,11 @@
 function [xtraj, utraj] = test()
 builder = RoadmapBuilder();
+
+% simulate the configuration
+u0 = [0 0 0 0 0 0 builder.runner.cf_model.nominal_thrust]';
+[xtraj, utraj] = builder.runner.simulate(0, 0, u0);
+return;
+
 [xtraj, utraj] = builder.run_simulations();
 return;
 
