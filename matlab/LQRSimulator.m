@@ -15,10 +15,10 @@ classdef LQRSimulator
     methods
         
         % get the ideal trajectory and velocity for the object
-        function [ideal_xtraj, ideal_utraj] = get_ideal_traj(obj, initial_position)
+        function [ideal_xtraj, ideal_utraj] = get_ideal_traj(obj, initial_state)
             % extract the pitch and the roll from the initial position
-            pitch = initial_position(TrajectorySimulator.pitch_index);
-            roll = initial_position(TrajectorySimulator.roll_index);
+            pitch = initial_state(TrajectorySimulator.pitch_index);
+            roll = initial_state(TrajectorySimulator.roll_index);
             
             % determine the file that most closely matches the pitch and
             % roll
@@ -31,7 +31,7 @@ classdef LQRSimulator
             ideal_utraj = ideal_traj.utraj;
         end
         
-        function system = get_controller(obj, ideal_xtraj, ideal_utraj)
+        function system = get_system(obj, ideal_xtraj, ideal_utraj)
             % set the correct output frames
             ideal_xtraj = ideal_xtraj.setOutputFrame(obj.model.getStateFrame);
             ideal_utraj = ideal_utraj.setOutputFrame(obj.model.getInputFrame);
@@ -47,22 +47,28 @@ classdef LQRSimulator
             system = feedback(obj.model, controller);
         end
         
-        function simulate_system(obj, initial_pos, system, time)
+        function systraj = simulate_system(obj, system, initial_state, total_time)
+
+            display('beginning simulation');
             % construct the system trajectory
-            systraj = system.simulate([0 time], initial_pos);
-            
+            display(initial_state);
+            systraj = system.simulate([0 total_time], initial_state);
+            display('finished simulation');
+
             % set the output frame
             systraj = systraj.setOutputFrame(getStateFrame(obj.model.manip));
-
+        end
+        
+        function visualize_system(obj, systraj)
             % make the visualizer and play back the trajectory
             v = obj.model.manip.constructVisualizer();
             v.playback(systraj, struct('slider', true));
         end
 
-        function simulate_initial_position(obj, initial_position)
+        function simulate_initial_state(obj, initial_state)
             
             % determine the ideal trajectory
-            [ideal_xtraj, ideal_utraj] = obj.get_ideal_traj(initial_position);
+            [ideal_xtraj, ideal_utraj] = obj.get_ideal_traj(initial_state);
             
             % get the system for the trajectory
             system = obj.get_system(ideal_xtraj, ideal_utraj);
@@ -70,7 +76,9 @@ classdef LQRSimulator
             % simulate the system for the specified amount of time
             traj_breaks = ideal_xtraj.getBreaks();
             total_time = traj_breaks(end);
-            obj.simulate_system(system, initial_position, total_time);
+
+            obj.simulate_system(system, initial_state, total_time);
+            
         end
     end
 end
