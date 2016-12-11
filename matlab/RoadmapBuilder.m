@@ -35,7 +35,7 @@ classdef RoadmapBuilder
             
         end
         
-        function export_results(obj, utraj, pitch, roll, u0)
+        function export_results(obj, xtraj, utraj, pitch, roll, u0)
             
             % construct a string representation for the initial velocity
             u0_str = '';
@@ -45,11 +45,14 @@ classdef RoadmapBuilder
 
             % remove the final comma
             u0_str = u0_str(1:length(u0_str) - 1);
+            
+            ideal_traj.xtraj = xtraj;
+            ideal_traj.utraj = utraj;
 
             % construct the file path to save the trajectory
             file_path = strcat('solved_trajectories/', num2str(pitch), '%', num2str(roll), '%', u0_str, '.mat');
 
-            save(file_path, 'utraj');
+            save(file_path, 'ideal_traj');
         end
 
         % helper method to get the optimal trajectory for configuration
@@ -68,7 +71,7 @@ classdef RoadmapBuilder
                 [xtraj, utraj] = obj.runner.simulate(pitch, roll, u0);
 
                 % export the results
-                obj.export_results(utraj, pitch, roll, u0);
+                obj.export_results(xtraj, utraj, pitch, roll, u0);
                 toc
                 
                 % increment the number of trajectories

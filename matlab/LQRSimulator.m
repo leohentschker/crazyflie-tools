@@ -5,6 +5,7 @@ classdef LQRSimulator
         Q = diag([300 300 300 2.5 2.5 300 .001 .001 .001 .001 .001 5])
         Qf = diag([300 300 300 2.5 2.5 300 .001 .001 .001 .001 .001 5])
         R = eye(7)
+
     end
     
     properties
@@ -38,22 +39,19 @@ classdef LQRSimulator
 
             % run tvlqr to get the controller
             [controller, ~] = tvlqr(obj.model,ideal_xtraj,ideal_utraj,obj.Q,obj.R,obj.Qf);
-            
+
             % set the output frame as the input frame of the model
             controller = controller.setOutputFrame(obj.model.getInputFrame);
             controller = controller.setInputFrame(obj.model.getOutputFrame);
-            
+
             % construct the system based on the controller
             system = feedback(obj.model, controller);
         end
-        
+
         function systraj = simulate_system(obj, system, initial_state, total_time)
 
-            display('beginning simulation');
             % construct the system trajectory
-            display(initial_state);
             systraj = system.simulate([0 total_time], initial_state);
-            display('finished simulation');
 
             % set the output frame
             systraj = systraj.setOutputFrame(getStateFrame(obj.model.manip));
@@ -65,19 +63,19 @@ classdef LQRSimulator
             v.playback(systraj, struct('slider', true));
         end
 
-        function simulate_initial_state(obj, initial_state)
-            
+        function systraj = simulate_initial_state(obj, initial_state)
+
             % determine the ideal trajectory
             [ideal_xtraj, ideal_utraj] = obj.get_ideal_traj(initial_state);
-            
+
             % get the system for the trajectory
             system = obj.get_system(ideal_xtraj, ideal_utraj);
-            
+
             % simulate the system for the specified amount of time
             traj_breaks = ideal_xtraj.getBreaks();
             total_time = traj_breaks(end);
 
-            obj.simulate_system(system, initial_state, total_time);
+            systraj = obj.simulate_system(system, initial_state, total_time);
             
         end
     end

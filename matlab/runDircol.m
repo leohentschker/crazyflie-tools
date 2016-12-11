@@ -10,6 +10,7 @@ prog = DircolTrajectoryOptimization(cf,N,[minimum_duration maximum_duration]);
 x0 = Point(getStateFrame(cf.manip));
 x0.base_x = 0;
 x0.base_z = .4;
+
 u0 = [0 0 0 0 0 0 cf.nominal_thrust]';
 
 prog = prog.addStateConstraint(ConstantConstraint(double(x0)),1);
@@ -26,9 +27,9 @@ prog = prog.addFinalCost(@finalCost);
 tf0 = 2;
 traj_init.x = PPTrajectory(foh([0,tf0],[double(x0),double(xf)]));
 traj_init.u = ConstantTrajectory(u0);
-display(traj_init.x);
-return;
 
+display(xf);
+return;
 info=0;
 while (info~=1)
   tic
@@ -38,7 +39,7 @@ while (info~=1)
   display(utraj);
   toc
 end
-
+return;
 if (nargout<1)
   v = constructVisualizer(cf.manip);
   xtraj = xtraj.setOutputFrame(cf.manip.getStateFrame);      

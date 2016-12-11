@@ -27,6 +27,8 @@ classdef TrajectorySimulator
         % given a velocity trajectory and an initial position,
         % determine the resulting x trajectory
         function xtraj = simulateTrajectory(obj, utraj, initial_pos)
+            
+            utraj = utraj.setOutputFrame(obj.runner.cf_model.getInputFrame);
 
             % construct the dynamical system
             sys = cascade(utraj, obj.runner.cf_model);
