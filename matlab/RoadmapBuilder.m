@@ -3,10 +3,10 @@ classdef RoadmapBuilder
     properties(Constant)
 
         min_pitch = 0
-        max_pitch = .7
+        max_pitch = 1
         
         min_roll = 0
-        max_roll = .7
+        max_roll = 1
         
         min_traj = 0
         
@@ -61,6 +61,8 @@ classdef RoadmapBuilder
             % store how many trajectories we have solved for so I can be
             % happy
             num_trajectories_found = 0;
+            
+            totalTime = 0;
 
             while true
                 tic
@@ -74,8 +76,14 @@ classdef RoadmapBuilder
                 obj.export_results(xtraj, utraj, pitch, roll, u0);
                 toc
                 
+                % update the total time taken
+                totalTime = totalTime + toc;
+                
                 % increment the number of trajectories
                 num_trajectories_found = num_trajectories_found + 1;
+
+                % display the average time
+                display(totalTime/ num_trajectories_found, 'averageTime');
                 
                 % display how many have been found
                 display(num_trajectories_found);

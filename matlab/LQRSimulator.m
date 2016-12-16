@@ -5,7 +5,7 @@ classdef LQRSimulator
         Q = diag([300 300 300 2.5 2.5 300 .001 .001 .001 .001 .001 5])
         Qf = diag([300 300 300 2.5 2.5 300 .001 .001 .001 .001 .001 5])
         R = eye(7)
-
+        
     end
     
     properties

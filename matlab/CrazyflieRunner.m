@@ -1,3 +1,6 @@
+% NOTE: This file is based on the work of Benoit Landry
+% https://github.com/blandry/crazyflie-tools/blob/master/matlab/runDircol.m
+
 classdef CrazyflieRunner
 
     properties(Constant)
